@@ -1,0 +1,88 @@
+##Maven builder
+application:
+  configuration:
+    configuration.port: 8080
+    configuration.scm-provider: "git"
+    configuration.scm-uri: ""
+    configuration.scm-branch: ""
+    configuration.recipe-url: "https://s3.amazonaws.com/qubell-starter-kit-artifacts/qubell-bazaar/component-maven-cookbooks-stable-99999.tar.gz"
+    compute-config.hardwareId: "t1.micro"
+    compute-config.imageId:    "ami-246ed34c"
+    compute-config.login:      "ec2-user"
+    compute-config.locationId: "us-east-1"
+  interfaces:
+    configuration:
+      "*": "bind(workflow#input.*)"
+    compute-config:
+      hardwareId: "bind(compute#configuration.hardwareId)"
+      imageId:    "bind(compute#configuration.imageId)"
+      login:      "bind(compute#configuration.login)"
+      locationId: "bind(compute#configuration.locationId)"
+    build-result:
+      war_urls: "bind(workflow#result.war_urls)"
+  
+  bindings:
+   - [workflow, compute]
+    
+  components:
+    compute:
+      type: compute.Instance
+    workflow:
+      type: workflow.Instance
+      interfaces:
+        input:
+          port:         { type: configuration(int),       name: Httpt Listen port  }
+          scm-provider: { type: configuration(string),       name: Scm provider       }
+          scm-uri:      { type: configuration(string),       name: Scm uri            }
+          scm-branch:   { type: configuration(string),       name: Scm branch         }
+          recipe-url:   { type: configuration(string),       name: Cookbooks url      }
+        compute:
+          networks:   consume-signal(map<string, map<string, string>>)
+          exec:       send-command(string command, int timeout => string stdOut, string stdErr => string stdOut, string stdErr, int exitCode)
+          put-file:   send-command(string filename, bytes payload)
+          get-file:   send-command(string filename => bytes payload)
+        result:
+          wars: publish-signal(list<string>)
+          war_urls: publish-signal(list<string>)
+      required: [ compute ]
+      configuration:
+        configuration.triggers:
+          input.scm-branch:            update
+          input.scm-provider:          update
+          input.scm-uri:               update
+          input.recipe-url:            update
+          compute.networks:            update
+        configuration.propagateStatus: [ update ]
+        configuration.workflows:
+          update: &update
+            steps:
+              - get-signals:
+                  action: getSignals
+                  output:
+                    signals: result
+              - build-app: ### Action "chefrun" downloads cookbooks archive by specified recipeUrl and run recipe descrbed in runList with provided attributes
+                  action: "chefrun"
+                  phase: build-app
+                  precedingPhases: [ get-signals ]
+                  parameters:
+                    isSolo: true
+                    roles: [ compute ]
+                    runList: [ "recipe[cookbook-qubell-build]" ]
+                    recipeUrl: "{$.recipe-url}"
+                    jattrs:
+                      cookbook-qubell-build:
+                        port: "{$.port}"
+                        host: "{$.signals.compute.networks.public.ip}"
+                      scm:
+                        provider:   "{$.scm-provider}"
+                        repository: "{$.scm-uri}"
+                        revision:   "{$.scm-branch}"
+                  output:
+                    chefAttrs: chefState
+            return: ### Values returned from workflow
+              wars:
+                value: "{$.chefAttrs['*'][0].cookbook-qubell-build.artifacts}"
+              war_urls:
+                value: "{$.chefAttrs['*'][0].cookbook-qubell-build.artifacts_urls}"
+          launch: *update
+  
