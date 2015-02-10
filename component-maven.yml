@@ -18,6 +18,11 @@ application:
       imageId:    "bind(compute#configuration.imageId)"
       login:      "bind(compute#configuration.login)"
       locationId: "bind(compute#configuration.locationId)"
+    compute:
+      networks:   "bind(compute#compute.networks)"
+      exec:       "bind(compute#compute.exec)"
+      put-file:   "bind(compute#compute.put-file)"
+      get-file:   "bind(compute#compute.get-file)"
     build-result:
       war_urls: "bind(workflow#result.war_urls)"
   
@@ -52,7 +57,8 @@ application:
           input.scm-uri:               update
           input.recipe-url:            update
           compute.networks:            update
-        configuration.propagateStatus: [ update ]
+        configuration.propagateStatus:
+          - update: [result]
         configuration.workflows:
           update: &update
             steps:
