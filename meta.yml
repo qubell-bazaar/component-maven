@@ -3,7 +3,7 @@ kit:
   link: https://github.com/qubell-bazaar/component-tomcat-dev
   applications:
     - name: "Build server"
-      manifest: https://raw.github.com/qubell-bazaar/component-maven/1.0-37p/component-maven.yml
+      manifest: https://raw.github.com/qubell-bazaar/component-maven/1.1-38p/component-maven.yml
   provider:
     name: "Qubell"
     link: http://qubell.com

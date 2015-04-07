@@ -2,10 +2,10 @@ Maven builder
 ===============
 Install and configure Apache maven build server
 
-Version 1.0-37p
+Version 1.1-38p
 ---------------
 
-[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.qubell.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-maven/1.0-37p/meta.yml)
+[![Install](https://raw.github.com/qubell-bazaar/component-skeleton/master/img/install.png)](https://express.qubell.com/applications/upload?metadataUrl=https://raw.github.com/qubell-bazaar/component-maven/1.1-38p/meta.yml)
 
 
 Features
